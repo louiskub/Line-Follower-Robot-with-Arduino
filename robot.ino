@@ -121,8 +121,8 @@ void loop()
   {
     if(analogRead(A1) > module[1].mid &&
        analogRead(A2) > module[2].mid&&
-       analogRead(A3) > module[3].mid &&
-       analogRead(A4) > module[4].mid)
+       analogRead(A4) > module[4].mid &&
+       analogRead(A5) > module[5].mid)
     {
       backward(100);
     }
