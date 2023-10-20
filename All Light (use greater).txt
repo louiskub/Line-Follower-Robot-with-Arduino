@@ -1,0 +1,16 @@
+Summary (Light Dark)
+Threshold
+A1 900 190
+A2 800 180
+A3 800 180
+A4 650 150
+A5 380 60
+
+
+Summary (Light Dark)2
+Threshold
+A1 1000 560
+A2 1000 560
+A3 1000 510
+A4 1000 540
+A5 1000 200

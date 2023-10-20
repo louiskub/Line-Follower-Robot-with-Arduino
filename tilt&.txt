@@ -1,0 +1,24 @@
+// All White
+ //W W W W W
+ if (analogRead(A1) >= module[1].mid &&
+        analogRead(A2) >= module[2].mid &&
+	analogRead(A3) >= module[3].mid &&
+	analogRead(A4) >= module[4].mid &&
+        analogRead(A5) >= module[5].mid))
+	{
+	backward();
+}
+
+//tilt
+  //W/D W/D W/D W W
+  if (analogRead(A1) <= module[1].mid ||
+        analogRead(A2) <= module[2].mid )
+        {
+      left(tilt); //Specified
+  }
+  // W W D/W W/D W/D
+  else if (
+        analogRead(A4) <= module[4].mid ||
+        analogRead(A5) <= module[5].mid){
+      right(tilt); //Specified
+  }

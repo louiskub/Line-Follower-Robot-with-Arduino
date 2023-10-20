@@ -1,0 +1,40 @@
+// All Dark
+ //D D D D D
+ if (analogRead(A1) <= module[1].mid &&
+        analogRead(A2) <= module[2].mid &&
+	analogRead(A3) <= module[3].mid &&
+	analogRead(A4) <= module[4].mid &&
+        analogRead(A5) <= module[5].mid))
+	{
+	left(normal);
+}
+
+//90 Degree
+  //D D D W W
+  if (analogRead(A1) <= module[1].mid &&
+        analogRead(A2) <= module[2].mid )
+        {
+      left(normal); //Specified
+  }
+  // W W D D D
+  else if (
+        analogRead(A4) <= module[4].mid &&
+        analogRead(A5) <= module[5].mid){
+      right(normal); //Specified
+  }
+
+
+
+//165 Degree
+  //D W D W W
+  if (analogRead(A1) <= module[1].mid &&
+        analogRead(A2) <= module[2].mid )
+        {
+      left(obtuse); //Specified
+  }
+  // W W D W D
+  else if (
+        analogRead(A4) <= module[4].mid &&
+        analogRead(A5) <= module[5].mid){
+      right(obtuse); //Specified
+  }
