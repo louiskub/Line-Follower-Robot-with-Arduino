@@ -1,20 +1,19 @@
-const int enA = 5;
-const int enB = 6;
+const int enA = 3;
+const int enB = 5;
 const int in1 = 9;
 const int in2 = 8;
 const int in3 = 10;
 const int in4 = 11;
 
-const int VEL = 100;
+const int VELA = 95;
+const int VELB = VELA+10;
 
 const int tilt = 5;
 const int normal = 400;
-const int forwardNormal = 300;
+const int forwardNormal = 200;
 
-const int obtuse = 730;
-const int forwardObtuse = 570;
-
-char lastSt = 'b', st = 'b';
+const int obtuse = 680;
+const int forwardObtuse = 500;
 
 struct threshold{
   int dark,light,mid;
@@ -37,8 +36,7 @@ void left(int duration){
   digitalWrite(in2,1);
   digitalWrite(in3,1);
   digitalWrite(in4,0);
-  analogWrite(enA,VEL);
-  analogWrite(enB,VEL);
+  
   delay(duration);
 
   stop(0);
@@ -53,8 +51,7 @@ void right(int duration){
   digitalWrite(in2,0);
   digitalWrite(in3,0);
   digitalWrite(in4,1);
-  analogWrite(enA,VEL);
-  analogWrite(enB,VEL);
+  
   delay(duration);
   stop(0);
 }
@@ -63,9 +60,6 @@ void forward(int duration){
   digitalWrite(in2,1);
   digitalWrite(in3,0);
   digitalWrite(in4,1);
-  
-  analogWrite(enA,VEL);
-  analogWrite(enB,VEL);
   
   delay(duration);
   stop(0);
@@ -77,6 +71,13 @@ void backward(int duration){
   digitalWrite(in4,0);
   delay(duration);
   stop(0);
+}
+bool checkWhite(){
+  return analogRead(A1) > module[1].mid &&
+       analogRead(A2) > module[2].mid &&
+       analogRead(A3) > module[3].mid &&
+       analogRead(A4) > module[4].mid &&
+       analogRead(A5) > module[5].mid;
 }
 
 void setup(){
@@ -104,13 +105,12 @@ void setup(){
   module[4].dark = 540;
   module[5].light = 1000;
   module[5].dark = 200;
-
+  analogWrite(enA,VELA);
+  analogWrite(enB,VELB);
   for(int i=1 ; i<=5 ; i++){
     module[i].mid = (module[i].dark + module[i].light)/2;
   }
 
-  bool ST;
-  bool lastST;
 }
   //Check Dark : <=
   //Check Light : >=
@@ -121,13 +121,14 @@ void loop()
   {
     if(analogRead(A1) > module[1].mid &&
        analogRead(A2) > module[2].mid&&
-       analogRead(A4) > module[4].mid &&
-       analogRead(A5) > module[5].mid)
+       analogRead(A5) > module[5].mid &&
+       analogRead(A4) > module[4].mid)
     {
-      backward(100);
+      while(!(analogRead(A3) <= module[3].mid && (analogRead(A2) <= module[2].mid || analogRead(A4) <= module[4].mid)))
+        forward(10);
     }
     //Tilt Left
-    else if(analogRead(A1) <= module[1].mid ||
+    if(analogRead(A1) <= module[1].mid ||
        analogRead(A2) <= module[2].mid)
     {
       left(tilt); 
@@ -147,7 +148,8 @@ void loop()
        analogRead(A3) <= module[3].mid &&
        analogRead(A4) <= module[4].mid)
     {
-      forward(forwardNormal); 
+      while(!checkWhite())
+        forward(tilt);
       right(normal); 
       forward(forwardNormal); 
     }
@@ -156,14 +158,8 @@ void loop()
     if(analogRead(A1) <= module[1].mid &&
        		analogRead(A2) <= module[2].mid)
     {
-      forward(forwardNormal); 
-      left(normal);  
-      forward(forwardNormal); 
-    }
-    else if(analogRead(A4) <= module[4].mid &&
-       		analogRead(A5) <= module[5].mid)
-    {
-      forward(forwardNormal); 
+      while(!checkWhite())
+        forward(tilt);
       right(normal); 
       forward(forwardNormal); 
     }
@@ -171,13 +167,15 @@ void loop()
     //315 Degree Left
     else if(analogRead(A1) <= module[1].mid)
     {
-      forward(forwardObtuse); 
+      while(!checkWhite())
+        forward(tilt);
       left(obtuse); 
       forward(forwardObtuse); 
     }
     else if(analogRead(A5) <= module[5].mid)
     {
-      forward(forwardObtuse); 
+      while(!checkWhite())
+        forward(tilt);
       right(obtuse); 
       forward(forwardObtuse); 
     }
@@ -185,7 +183,7 @@ void loop()
     //Forward
     else
     {
-      forward(100); //Less time = more frequent uppdate
+      forward(10); //Less time = more frequent uppdate
     }
   }
 }
