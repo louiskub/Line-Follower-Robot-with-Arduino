@@ -5,14 +5,15 @@ const int in2 = 8;
 const int in3 = 10;
 const int in4 = 11;
 const int photo = A0;
-const int VELA = 110;
-const int VELB = VELA+10;
+int VELA = 110;
+int VELB = VELA+10;
 const int tilt = 20;
 
 bool turn = 0;
 int foundDark = 1;
 unsigned int waitTime;
 unsigned int whiteTimer;
+unsigned int darkTimer;
 
 int intersecttimer;
 int whiteinterval = 600;
@@ -133,42 +134,29 @@ void setup(){
 void loop()
 {
   if((checkDark() && foundDark%2 == 0) || (checkAllDark() && foundDark%2 == 1)){
-    foundDark++;
+    darkTimer = millis();
     while(analogRead(photo) > 300);
+    foundDark++;
     waitTime = millis();
-    while(millis()-waitTime < 3000)
+    while(millis()-waitTime < 4000)
       if(analogRead(photo) > 300)
-        while(millis()-waitTime < 3000)
+        while(millis()-waitTime < 4000)
           if(analogRead(photo) <= 300)
             turn = true;
     if(turn){
       forward(300);
-      right(350);
-      while(analogRead(A3) > module[3].mid && analogRead(A2) > module[2].mid){
+      right(400);
+      while(analogRead(A3) > module[3].mid && analogRead(A2) > module[4].mid)
         right(tilt);
-      }
     }
     else{
       forward(300);
-      left(350);
-      while(analogRead(A3) > module[3].mid && analogRead(A4) > module[4].mid){
+      left(400);
+      while(analogRead(A3) > module[3].mid && analogRead(A4) > module[4].mid)
         left(tilt);
-      }
     }
     turn = false;
     whiteTimer = millis();
-  }
-  
-  if(analogRead(A1) <= module[1].mid || analogRead(A2) <= module[2].mid || analogRead(A3) <= module[3].mid || analogRead(A4) <= module[4].mid || analogRead(A5) <= module[5].mid ){
-    if(millis() - whiteTimer >= whiteinterval){
-      forward(50);
-      
-    }
-    whiteTimer = millis();
-  }
-    
-  if(checkWhite() && millis() - whiteTimer >= whiteinterval){
-    backward(100);
   }
   
   else 
@@ -194,15 +182,16 @@ void loop()
 
     if(analogRead(A2) > module[2].mid && analogRead(A4) > module[4].mid) //Mid Dark
     {
+      whiteTimer = millis();
       forward(tilt);      
     }
     else if(analogRead(A1) <= module[1].mid){
       whiteTimer = millis();
-      left(tilt);
+      left(tilt*2);
     }
     else if(analogRead(A5) <= module[5].mid){
       whiteTimer = millis();
-      right(tilt);
+      right(tilt*2);
     }
     else if(analogRead(A2) <= module[2].mid){
       whiteTimer = millis();
