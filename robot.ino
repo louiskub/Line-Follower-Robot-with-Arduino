@@ -5,21 +5,15 @@ const int in2 = 8;
 const int in3 = 10;
 const int in4 = 11;
 const int photo = A0;
-int VELA = 110;
-int VELB = VELA+10;
-const int tilt = 20;
 
-bool turn = 0;
-int foundDark = 1;
-unsigned int waitTime;
-unsigned int whiteTimer;
-unsigned int darkTimer;
+const int VELA = 110;
+const int VELB = VELA+10;
+const int tilt = 2;
+bool turn = false;
 
-int intersecttimer;
-int whiteinterval = 600;
+unsigned int waitTime = 0;
 
-bool flashdetected = false;
-unsigned long flashstarttime = 0;
+int val[6];
 
 struct threshold{
   int dark,light,mid;
@@ -34,22 +28,32 @@ void stop(int duration){
 }
 void left(int duration){
   digitalWrite(in1,0);
+  digitalWrite(in2,0);
+  digitalWrite(in3,0);
+  digitalWrite(in4,0);
+
+  digitalWrite(in1,0);
   digitalWrite(in2,1);
   digitalWrite(in3,1);
   digitalWrite(in4,0);
-  analogWrite(enA,100);
-  analogWrite(enB,110);
+  analogWrite(enA,VELA);
+  analogWrite(enB,VELB);
   delay(duration);
 
   stop(0);
 }
 void right(int duration){
+  digitalWrite(in1,0);
+  digitalWrite(in2,0);
+  digitalWrite(in3,0);
+  digitalWrite(in4,0);
+
   digitalWrite(in1,1);
   digitalWrite(in2,0);
   digitalWrite(in3,0);
   digitalWrite(in4,1);
-  analogWrite(enA,100);
-  analogWrite(enB,110);
+  analogWrite(enA,VELA);
+  analogWrite(enB,VELB);
   delay(duration);
   stop(0);
 }
@@ -58,7 +62,7 @@ void forward(int duration){
   digitalWrite(in2,1);
   digitalWrite(in3,0);
   digitalWrite(in4,1);
-
+  
   analogWrite(enA,VELA);
   analogWrite(enB,VELB);
   
@@ -70,35 +74,11 @@ void backward(int duration){
   digitalWrite(in2,0);
   digitalWrite(in3,1);
   digitalWrite(in4,0);
-  analogWrite(enA,VELA);
-  analogWrite(enB,VELB);
   delay(duration);
   stop(0);
 }
-bool checkWhite(){
-  return 
-       analogRead(A2) > module[2].mid &&
-       analogRead(A3) > module[3].mid &&
-       analogRead(A4) > module[4].mid &&
-       analogRead(A1) > module[1].mid &&
-       analogRead(A5) > module[5].mid;
-}
-bool checkDark(){
-  return 
-       analogRead(A2) <= module[2].mid &&
-       analogRead(A3) <= module[3].mid &&
-       analogRead(A4) <= module[4].mid &&
-       (analogRead(A1) <= module[1].mid ||
-       analogRead(A5) <= module[5].mid);
-}
-bool checkAllDark(){
-  return 
-       analogRead(A2) <= module[2].mid &&
-       analogRead(A3) <= module[3].mid &&
-       analogRead(A4) <= module[4].mid &&
-       analogRead(A1) <= module[1].mid &&
-       analogRead(A5) <= module[5].mid;
-}
+
+
 void setup(){
   Serial.begin(9600);
   pinMode(A1,INPUT);
@@ -128,80 +108,85 @@ void setup(){
   for(int i=1 ; i<=5 ; i++){
     module[i].mid = (module[i].dark + module[i].light)/2;
   }
+
+  bool ST;
+  bool lastST;
 }
   //Check Dark : <=
   //Check Light : >=
 void loop()
 {
-  if((checkDark() && foundDark%2 == 0) || (checkAllDark() && foundDark%2 == 1)){
-    darkTimer = millis();
+  val[1] = analogRead(A1);
+  val[2] = analogRead(A2);
+  val[3] = analogRead(A3);
+  val[4] = analogRead(A4);
+  val[5] = analogRead(A5);
+  if(val[2] <= module[2].mid &&
+       val[3] <= module[3].mid &&
+       val[4] <= module[4].mid &&
+       (val[1] <= module[1].mid ||
+       val[5] <= module[5].mid))
+  {
     while(analogRead(photo) > 300);
-    foundDark++;
     waitTime = millis();
-    while(millis()-waitTime < 4000)
+    while(millis()-waitTime < 2900 || !turn)
       if(analogRead(photo) > 300)
-        while(millis()-waitTime < 4000)
-          if(analogRead(photo) <= 300)
+        while(millis()-waitTime < 2900 || !turn)
+          if(analogRead(photo) < 300)
             turn = true;
-    if(turn){
-      forward(300);
-      right(400);
-      while(analogRead(A3) > module[3].mid && analogRead(A2) > module[4].mid)
+    
+    if(turn){ 
+      while(analogRead(A3) <= module[3].mid)
+        forward(tilt);
+      forward(200);
+      while(analogRead(A2) > module[2].mid || val[3] > module[3].mid)
         right(tilt);
     }
-    else{
-      forward(300);
-      left(400);
-      while(analogRead(A3) > module[3].mid && analogRead(A4) > module[4].mid)
+    else {
+      while(analogRead(A3) <= module[3].mid)
+        forward(tilt);
+      forward(200);
+      while(analogRead(A4) > module[4].mid || analogRead(A3) > module[3].mid)
         left(tilt);
     }
     turn = false;
-    whiteTimer = millis();
+  }else {
+    if(val[3] <= module[3].mid){
+      if(val[1] <= module[1].mid){
+        while(analogRead(A2) <= module[2].mid)
+          forward(tilt);
+        forward(100);
+        while(analogRead(A3) > module[3].mid)
+          left(tilt);
+      }
+      else if(val[5] <= module[5].mid){
+        while(analogRead(A4) <= module[4].mid)
+          forward(tilt);
+        forward(100);
+        while(analogRead(A3) > module[3].mid)
+          right(tilt);
+      }
+
+      else if(val[2] <= module[2].mid){
+        left(tilt); 
+        forward(tilt*2);
+      }
+      else if(val[4] <= module[4].mid){
+        right(tilt);
+        forward(tilt*2);
+      }
+      else 
+        forward(tilt);
+    }
+    else {
+      if(val[1] <= module[1].mid || val[2] <= module[2].mid)
+        left(tilt); 
+      else if(val[4] <= module[4].mid || val[5] <= module[5].mid)
+        right(tilt); 
+      else
+        forward(tilt);
+    }
   }
   
-  else 
-  {
-    if(analogRead(A3) <= module[3].mid && analogRead(A5) <= module[5].mid){
-      intersecttimer = millis();
-      while(millis() - intersecttimer <= 400 && !((checkDark() && foundDark%2 == 0) || (checkAllDark() && foundDark%2 == 1)))
-        forward(1);
-      while(analogRead(A3) > module[3].mid && analogRead(A2) > module[2].mid){
-        whiteTimer = millis();
-        right(tilt);
-      }
-    }
-    else if(analogRead(A3) <= module[3].mid && analogRead(A1) <= module[1].mid){
-      intersecttimer = millis();
-      while(millis() - intersecttimer <= 400 && !((checkDark() && foundDark%2 == 0) || (checkAllDark() && foundDark%2 == 1)))
-        forward(1);
-      while(analogRead(A3) > module[3].mid && analogRead(A4) > module[4].mid){
-        whiteTimer = millis();
-        left(tilt);
-      }
-    }
-
-    if(analogRead(A2) > module[2].mid && analogRead(A4) > module[4].mid) //Mid Dark
-    {
-      whiteTimer = millis();
-      forward(tilt);      
-    }
-    else if(analogRead(A1) <= module[1].mid){
-      whiteTimer = millis();
-      left(tilt*2);
-    }
-    else if(analogRead(A5) <= module[5].mid){
-      whiteTimer = millis();
-      right(tilt*2);
-    }
-    else if(analogRead(A2) <= module[2].mid){
-      whiteTimer = millis();
-      left(tilt);
-      forward(tilt);
-    }
-    else if(analogRead(A4) <= module[4].mid){
-      whiteTimer = millis();
-      right(tilt);
-      forward(tilt);
-    }
-  }
 }
+
